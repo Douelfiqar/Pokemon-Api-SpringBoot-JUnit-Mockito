@@ -20,7 +20,6 @@ public class PokemonController {
 
     private final PokemonService pokemonService;
 
-
     @PostMapping
     public ResponseEntity<PokemonResponse> createPokemon(@RequestBody PokemonRequest pokemonRequest) {
         PokemonResponse createdPokemon = pokemonService.savePokemon(pokemonRequest);

@@ -1,61 +1,82 @@
 package com.example.demo.services;
 
+import com.example.demo.dto.PokemonRequest;
+import com.example.demo.dto.PokemonResponse;
+import com.example.demo.dto.ReviewRequest;
+import com.example.demo.dto.ReviewResponse;
+import com.example.demo.entities.Pokemon;
 import com.example.demo.entities.Review;
+import com.example.demo.exception.PokemonNotFoundException;
+import com.example.demo.mappers.PokemonMapper;
+import com.example.demo.mappers.ReviewMapper;
+import com.example.demo.repositories.PokemonRepository;
 import com.example.demo.repositories.ReviewRepository;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@AllArgsConstructor
 public class ReviewService {
 
-    private final ReviewRepository reviewRepository;
+    private ReviewRepository reviewRepository;
+    private PokemonRepository pokemonRepository;
+    public ReviewResponse saveReview(ReviewRequest reviewRequest) {
+        Review review = ReviewMapper.INSTANCE.reviewRequestToReview(reviewRequest);
 
-    @Autowired
-    public ReviewService(ReviewRepository reviewRepository) {
-        this.reviewRepository = reviewRepository;
+        Pokemon pokemon = pokemonRepository.findById(reviewRequest.getPokemonId()).get();
+        review.setPokemon(pokemon);
+
+        Review savedReview = reviewRepository.save(review);
+
+        return ReviewMapper.INSTANCE.reviewToReviewResponse(savedReview);
     }
 
-    public Review saveReview(Review review) {
-        return reviewRepository.save(review);
+    public Optional<ReviewResponse> getReviewById(Long id) throws PokemonNotFoundException {
+        Optional<Review> reviewOptional =  reviewRepository.findById(id);
+        if(reviewOptional.isPresent()){
+            Review review = reviewOptional.get();
+            ReviewResponse reviewResponse = ReviewMapper.INSTANCE.reviewToReviewResponse(review);
+            return Optional.of(reviewResponse);
+        }
+        throw new PokemonNotFoundException("Review not found with ID"+id);
     }
 
-    public Optional<Review> getReviewById(Long id) {
-        return reviewRepository.findById(id);
+    public List<ReviewResponse> getAllReviews() {
+        List<Review> reviewList =  reviewRepository.findAll();
+        List<ReviewResponse> reviewResponses = reviewList.stream().map(ReviewMapper.INSTANCE::reviewToReviewResponse).collect(Collectors.toList());
+        return reviewResponses;
     }
 
-    public List<Review> getAllReviews() {
-        return reviewRepository.findAll();
-    }
+    public ReviewResponse updateReview(Long id, ReviewRequest updatedReview) throws PokemonNotFoundException {
 
-    public Review updateReview(Long id, Review updatedReview) {
-        // Check if the Review with the given ID exists
         Optional<Review> existingReviewOptional = reviewRepository.findById(id);
         if (existingReviewOptional.isPresent()) {
             Review existingReview = existingReviewOptional.get();
-            // Update the existing Review with the new data
-            existingReview.setTitle(updatedReview.getTitle());
+
             existingReview.setContent(updatedReview.getContent());
+            existingReview.setTitle(updatedReview.getTitle());
             existingReview.setStarts(updatedReview.getStarts());
-            // You can update other fields as needed
-            return reviewRepository.save(existingReview);
-        } else {
-            // Review with the given ID does not exist
-            System.out.println("Review not found with ID: " + id);
+            Review review = reviewRepository.save(existingReview);
+
+            return ReviewMapper.INSTANCE.reviewToReviewResponse(review);
         }
+
+        throw new PokemonNotFoundException("Review not found with ID"+id);
+
+
     }
 
-    public void deleteReview(Long id) {
-        // Check if the Review with the given ID exists
+    public void deleteReview(Long id) throws PokemonNotFoundException {
+        // Check if the Pokemon with the given ID exists
         if (reviewRepository.existsById(id)) {
             reviewRepository.deleteById(id);
-        } else {
-            // Review with the given ID does not exist
-            System.out.println("Review not found with ID: " + id);
         }
+        throw new PokemonNotFoundException("Review not found with ID"+id);
     }
 }

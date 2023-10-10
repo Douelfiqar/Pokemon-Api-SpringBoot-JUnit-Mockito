@@ -10,5 +10,5 @@ public class ReviewResponse {
     private Long id;
     private String title;
     private String content;
-    private int start;
+    private int starts;
 }

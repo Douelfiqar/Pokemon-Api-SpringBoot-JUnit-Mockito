@@ -10,6 +10,6 @@ import lombok.NoArgsConstructor;
 public class ReviewRequest {
     private String title;
     private String content;
-    private int start;
+    private int starts;
     private Long pokemonId;
 }

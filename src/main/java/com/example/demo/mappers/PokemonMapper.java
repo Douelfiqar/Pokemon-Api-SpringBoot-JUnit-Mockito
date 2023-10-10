@@ -16,5 +16,6 @@ public interface PokemonMapper {
     @Mapping(source = "id", target = "id")
     @Mapping(source = "name", target = "name")
     @Mapping(source = "type", target = "type")
+    @Mapping(source = "reviewsList", target = "reviewsList")
     PokemonResponse pokemonToPokemonResponse(Pokemon pokemon);
 }
